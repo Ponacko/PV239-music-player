@@ -57,12 +57,12 @@ public class MainActivity extends ListActivity {
         Realm.init(this);
         realm = Realm.getDefaultInstance();
         RealmResults<Song> results = realm.where(Song.class).findAll();
-        //if (results.isEmpty()){
+        if (results.isEmpty()){
             updatePlaylist();
-        //}
-        //else {
-        //    songs = results.subList(0, results.size() - 1);
-        //}
+        }
+        else {
+            songs = results.subList(0, results.size() - 1);
+        }
         SongAdapter songList = new SongAdapter(this, R.layout.song_item, songs);
         setListAdapter(songList);
 
