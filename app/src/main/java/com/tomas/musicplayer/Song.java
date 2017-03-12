@@ -11,24 +11,32 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
 import static java.lang.Integer.parseInt;
 
 /**
  * Created by Tomas on 27. 2. 2017.
  */
 
-public class Song {
-    private final String path;
-    private final String title;
-    private final String album;
-    private final String artist;
-    private final int trackNumber;
-    private final int discNumber;
-    private final int duration;
+public class Song extends RealmObject {
+    @PrimaryKey
+    private String path;
+    private String title;
+    private String album;
+    private String artist;
+    private int trackNumber;
+    private int discNumber;
+    private int duration;
     private String artwork;
     private int elapsedTime;
 
-    public Song(String path, MediaMetadataRetriever md) {
+    public Song() {
+
+    }
+
+    public void init(String path, MediaMetadataRetriever md){
         md.setDataSource(path);
         this.path = path;
         this.title =

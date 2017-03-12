@@ -20,23 +20,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
 
-
-class Mp3Filter implements FilenameFilter {
-
-    @Override
-    public boolean accept(File file, String name) {
-        return (name.endsWith(".mp3"));
-    }
-}
-
-class DirFilter implements FilenameFilter {
-
-    @Override
-    public boolean accept(File file, String name) {
-        return (file.isDirectory());
-    }
-}
 
 public class MainActivity extends ListActivity {
     private static final String SD_PATH = Environment.getExternalStorageDirectory().getParentFile().getParentFile().getPath();
@@ -50,6 +36,7 @@ public class MainActivity extends ListActivity {
     TextView artistText;
     TextView songText;
     ImageView artwork;
+    Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +47,18 @@ public class MainActivity extends ListActivity {
         artistText = (TextView)findViewById(R.id.artistText);
         songText = (TextView)findViewById(R.id.songText);
         artwork = (ImageView)findViewById(R.id.artwork);
-        updatePlaylist();
+        Realm.init(this);
+        realm = Realm.getDefaultInstance();
+        RealmResults<Song> results = realm.where(Song.class).findAll();
+        if (results.isEmpty()){
+            updatePlaylist();
+        }
+        else {
+            songs = results.subList(0, results.size() - 1);
+        }
+        SongAdapter songList = new SongAdapter(this, R.layout.song_item, songs);
+        setListAdapter(songList);
+
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,12 +96,12 @@ public class MainActivity extends ListActivity {
         try{
 
             mp.reset();
-            mp.setDataSource(songPaths.get(position));
+            final Song currentSong = songs.get(position);
+            mp.setDataSource(currentSong.getPath());
             mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
 
-                    Song currentSong = songs.get(position);
                     artistText.setText(currentSong.getArtist());
                     songText.setText(currentSong.getTitle());
                     Picasso.with(MainActivity.this).load(currentSong.getArtwork()).into(artwork);
@@ -128,11 +126,12 @@ public class MainActivity extends ListActivity {
         final MediaMetadataRetriever md = new MediaMetadataRetriever();
         findSongs(home);
         for (String s : songPaths){
-            songs.add(new Song(s, md));
+            Song song = new Song();
+            song.init(s, md);
+            songs.add(song);
         }
-
-        SongAdapter songList = new SongAdapter(this, R.layout.song_item, songs);
-        setListAdapter(songList);
-
+        realm.beginTransaction();
+        List<Song> realmSongs = realm.copyToRealm(songs);
+        realm.commitTransaction();
     }
 }
