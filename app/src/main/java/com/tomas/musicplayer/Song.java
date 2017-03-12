@@ -21,6 +21,7 @@ import static java.lang.Integer.parseInt;
  */
 
 public class Song extends RealmObject {
+    public static String NO_ARTIST = "Missing artist";
     @PrimaryKey
     private String path;
     private String title;
@@ -76,7 +77,7 @@ public class Song extends RealmObject {
 
     public String getArtist() {
         if (artist== null){
-        return  "Missing artist";
+        return  NO_ARTIST;
     }
         return artist;
     }
@@ -119,40 +120,6 @@ public class Song extends RealmObject {
         }
         return Integer.parseInt(
                 (idx >= 0) ? intish.substring(0, idx) : intish);
-    }
-
-    // Constant with a file name
-    public static String fileName = "songList.ser";
-
-    // Serializes an object and saves it to a file
-    public void saveToFile(List<Song> obj, Context context) {
-        try {
-            FileOutputStream fileOutputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(obj);
-            objectOutputStream.close();
-            fileOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Creates an object by reading it from a file
-    public static List<Song> readFromFile(Context context) {
-        List<Song> songList = null;
-        try {
-            FileInputStream fileInputStream = context.openFileInput(fileName);
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            songList = (List<Song>) objectInputStream.readObject();
-            objectInputStream.close();
-            fileInputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return songList;
     }
 
     @Override

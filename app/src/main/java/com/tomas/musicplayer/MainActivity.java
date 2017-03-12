@@ -18,9 +18,15 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 
@@ -31,6 +37,7 @@ public class MainActivity extends ListActivity {
     private static final String pauseSymbol = "❚❚";
     private List<String> songPaths = new ArrayList<>();
     private List<Song> songs = new ArrayList<Song>();
+    private Set<Artist> artists = new HashSet<>();
     final MediaPlayer mp = new MediaPlayer();
     Button pl = null;
     TextView artistText;
@@ -50,12 +57,12 @@ public class MainActivity extends ListActivity {
         Realm.init(this);
         realm = Realm.getDefaultInstance();
         RealmResults<Song> results = realm.where(Song.class).findAll();
-        if (results.isEmpty()){
+        //if (results.isEmpty()){
             updatePlaylist();
-        }
-        else {
-            songs = results.subList(0, results.size() - 1);
-        }
+        //}
+        //else {
+        //    songs = results.subList(0, results.size() - 1);
+        //}
         SongAdapter songList = new SongAdapter(this, R.layout.song_item, songs);
         setListAdapter(songList);
 
@@ -128,9 +135,16 @@ public class MainActivity extends ListActivity {
         for (String s : songPaths){
             Song song = new Song();
             song.init(s, md);
+            String artistName = song.getArtist();
+            if (artistName != Song.NO_ARTIST){
+                Artist artist = new Artist();
+                artist.init(artistName);
+                artists.add(artist);
+            }
             songs.add(song);
         }
         realm.beginTransaction();
+        List<Artist> realmArtists = realm.copyToRealm(artists);
         List<Song> realmSongs = realm.copyToRealm(songs);
         realm.commitTransaction();
     }
