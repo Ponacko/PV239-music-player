@@ -128,8 +128,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new SongFragment(), "SONGS");
         adapter.addFragment(new ArtistFragment(), "ARTISTS");
+        adapter.addFragment(new SongFragment(), "SONGS");
         viewPager.setAdapter(adapter);
     }
 
