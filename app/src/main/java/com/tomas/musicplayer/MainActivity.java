@@ -5,8 +5,13 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Environment;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -30,7 +35,7 @@ import io.realm.RealmList;
 import io.realm.RealmResults;
 
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends AppCompatActivity {
     private static final String SD_PATH = Environment.getExternalStorageDirectory().getParentFile().getParentFile().getPath();
     private static final String SD_PATH2 = Environment.getExternalStorageDirectory().getParentFile().getPath();
     private static final String playSymbol = "▶";
@@ -44,11 +49,26 @@ public class MainActivity extends ListActivity {
     TextView songText;
     ImageView artwork;
     Realm realm;
+    private Toolbar toolbar;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+    SongAdapter songList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        viewPager = (ViewPager) findViewById(R.id.viewpager);
+        setupViewPager(viewPager);
+
+        tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
         final Button play = (Button) findViewById(R.id.playButton);
         pl = play;
         artistText = (TextView)findViewById(R.id.artistText);
@@ -63,8 +83,8 @@ public class MainActivity extends ListActivity {
         else {
             songs = results.subList(0, results.size() - 1);
         }
-        SongAdapter songList = new SongAdapter(this, R.layout.song_item, songs);
-        setListAdapter(songList);
+        songList = new SongAdapter(this, R.layout.song_item, songs);
+
 
 
         play.setOnClickListener(new View.OnClickListener() {
@@ -83,6 +103,41 @@ public class MainActivity extends ListActivity {
         });
     }
 
+    public void play(int position){
+        try{
+            mp.reset();
+            final Song currentSong = songs.get(position);
+            mp.setDataSource(currentSong.getPath());
+            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mediaPlayer) {
+
+                    artistText.setText(currentSong.getArtist());
+                    songText.setText(currentSong.getTitle());
+                    mediaPlayer.start();
+                    pl.setText(pauseSymbol);
+                }
+            });
+            mp.prepareAsync();
+
+        } catch (IOException e) {
+            Log.v(getString(R.string.app_name),e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void setupViewPager(ViewPager viewPager) {
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.addFragment(new SongFragment(), "SONGS");
+        adapter.addFragment(new ArtistFragment(), "ARTISTS");
+        viewPager.setAdapter(adapter);
+    }
+
+    public SongAdapter getSongAdapter(){
+        return songList;
+    }
+
+
     private void findSongs(File folder) {
         File[] files = folder.listFiles(new Mp3Filter());
         if (files != null && files.length > 0) {
@@ -98,31 +153,6 @@ public class MainActivity extends ListActivity {
         }
     }
 
-    @Override
-    protected void onListItemClick(ListView list, View v, final int position, long id) {
-        try{
-
-            mp.reset();
-            final Song currentSong = songs.get(position);
-            mp.setDataSource(currentSong.getPath());
-            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mediaPlayer) {
-
-                    artistText.setText(currentSong.getArtist());
-                    songText.setText(currentSong.getTitle());
-                    Picasso.with(MainActivity.this).load(currentSong.getArtwork()).into(artwork);
-                    mediaPlayer.start();
-                    pl.setText(pauseSymbol);
-                }
-            });
-            mp.prepareAsync();
-
-        } catch (IOException e) {
-            Log.v(getString(R.string.app_name),e.getMessage());
-            e.printStackTrace();
-        }
-    }
 
     private void updatePlaylist() {
 

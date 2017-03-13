@@ -20,11 +20,11 @@
         <activity
             android:name=".AudioPlayer"
             android:label="@string/title_activity_audio_player"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".MenuActivity"
             android:label="@string/title_activity_menu"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".PlayActivity"
             android:label="@string/title_activity_play"
