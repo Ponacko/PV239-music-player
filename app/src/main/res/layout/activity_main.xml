@@ -48,14 +48,13 @@
         android:layout_height="wrap_content" />-->
 
     <LinearLayout
+        android:id="@+id/bottomBar"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:clickable="true"
         android:layout_alignParentTop="true">
-
-
-
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

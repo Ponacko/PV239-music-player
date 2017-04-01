@@ -11,7 +11,7 @@ import retrofit2.http.Query;
  * Created by Tomas on 31. 3. 2017.
  */
 
-public interface LololyricsService {
+public interface HerokuappService {
     @GET("{artist}/{title}")
     Call<Lyrics> getLyrics(@Path("artist") String artist, @Path("title") String title);
 }

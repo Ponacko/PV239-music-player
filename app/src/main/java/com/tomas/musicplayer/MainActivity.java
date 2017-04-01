@@ -1,6 +1,6 @@
 package com.tomas.musicplayer;
 
-import android.app.ListActivity;
+import android.content.Intent;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Environment;
@@ -11,31 +11,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -59,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
     SongAdapter songList;
+    private Song currentSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +83,18 @@ public class MainActivity extends AppCompatActivity {
             songs = results.subList(0, results.size() - 1);
         }
         songList = new SongAdapter(this, R.layout.song_item, songs);
+        LinearLayout bottomBar = (LinearLayout) findViewById(R.id.bottomBar);
+        bottomBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, PlayActivity.class);
+                if (currentSong != null){
+                    intent.putExtra("currentSong", currentSong);
+                    startActivity(intent);
+                }
+
+            }
+        });
 
 
 
@@ -112,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     public void play(int position){
         try{
             mp.reset();
-            final Song currentSong = songs.get(position);
+            currentSong = songs.get(position);
             mp.setDataSource(currentSong.getPath());
 
 
@@ -121,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
-            LololyricsService service = retrofit.create(LololyricsService.class);
+            HerokuappService service = retrofit.create(HerokuappService.class);
             Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
             lyricsCall.enqueue(new Callback<Lyrics>() {
                 @Override
