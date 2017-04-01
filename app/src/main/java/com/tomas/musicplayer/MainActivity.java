@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         setupViewPager(viewPager);
@@ -83,13 +83,14 @@ public class MainActivity extends AppCompatActivity {
             songs = results.subList(0, results.size() - 1);
         }
         songList = new SongAdapter(this, R.layout.song_item, songs);
+
         LinearLayout bottomBar = (LinearLayout) findViewById(R.id.bottomBar);
         bottomBar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, PlayActivity.class);
                 if (currentSong != null){
-                    intent.putExtra("currentSong", currentSong);
+                    intent.putExtra("currentSongPath", currentSong.getPath());
                     startActivity(intent);
                 }
 
@@ -131,7 +132,9 @@ public class MainActivity extends AppCompatActivity {
             lyricsCall.enqueue(new Callback<Lyrics>() {
                 @Override
                 public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
+                    realm.beginTransaction();
                     currentSong.lyrics = response.body().lyric;
+                    realm.commitTransaction();
                 }
 
                 @Override

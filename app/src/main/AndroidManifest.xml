@@ -29,6 +29,7 @@
         <activity
             android:name=".PlayActivity"
             android:label="@string/title_activity_play"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme"></activity>
     </application>
 

@@ -8,6 +8,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.TextView;
 
+import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
+
 public class PlayActivity extends AppCompatActivity {
     private Song currentSong;
 
@@ -17,9 +21,17 @@ public class PlayActivity extends AppCompatActivity {
         setContentView(R.layout.activity_play);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Song currentSong = (Song)getIntent().getSerializableExtra("currentSong");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        setSupportActionBar(toolbar);
+
+        Realm realm = Realm.getDefaultInstance();
+        String currentSongPath = (String) getIntent().getSerializableExtra("currentSongPath");
+        currentSong = realm.where(Song.class).equalTo("path", currentSongPath).findFirst();
         TextView lyric = (TextView)findViewById(R.id.lyric);
         lyric.setText(currentSong.lyrics);
+        setTitle(currentSong.getTitle());
+        getSupportActionBar().setTitle(currentSong.getTitle());
     }
 
 }

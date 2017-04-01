@@ -20,7 +20,7 @@ import static java.lang.Integer.parseInt;
  * Created by Tomas on 27. 2. 2017.
  */
 
-public class Song extends RealmObject implements Serializable{
+public class Song extends RealmObject{
     public static String NO_ARTIST = "Missing artist";
     @PrimaryKey
     private String path;
