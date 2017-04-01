@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -19,15 +18,6 @@ public class ArtistAdapter extends ArrayAdapter<Artist> {
         super(context, resource, objects);
     }
 
-    @Override
-    public void notifyDataSetChanged() {
-        this.setNotifyOnChange(false);
-
-        this.sort(new ArtistComparator());
-
-        this.setNotifyOnChange(true);
-    }
-
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             convertView = LayoutInflater.from(this.getContext())
@@ -36,7 +26,7 @@ public class ArtistAdapter extends ArrayAdapter<Artist> {
 
         Artist artist = getItem(position);
         if (artist!= null) {
-            TextView text = (TextView)convertView.findViewById(R.id.text1);
+            TextView text = (TextView)convertView.findViewById(R.id.songName);
             text.setText(artist.getName());
         }
 

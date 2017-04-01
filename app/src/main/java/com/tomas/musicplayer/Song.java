@@ -31,6 +31,7 @@ public class Song extends RealmObject {
     private int discNumber;
     private int duration;
     private String artwork;
+    public String lyrics;
     private int elapsedTime;
 
     public Song() {

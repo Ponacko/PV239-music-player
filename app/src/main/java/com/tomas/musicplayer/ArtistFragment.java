@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -40,8 +41,9 @@ public class ArtistFragment extends Fragment{
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view,savedInstanceState);
-        List<Artist> artists = ((MainActivity)getActivity()).realm.where(Artist.class).findAll();
+        List<Artist> artists = ((MainActivity)getActivity()).realm.where(Artist.class).findAllSorted("name");
         artistList = new ArtistAdapter(getContext(), R.layout.artist_item, artists);
+        artistList.notifyDataSetChanged();
         list.setAdapter(artistList);
         //list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            // @Override

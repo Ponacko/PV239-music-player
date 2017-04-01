@@ -33,6 +33,12 @@ import java.util.Set;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Converter;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -108,12 +114,33 @@ public class MainActivity extends AppCompatActivity {
             mp.reset();
             final Song currentSong = songs.get(position);
             mp.setDataSource(currentSong.getPath());
+
+
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("http://lyric-api.herokuapp.com/api/find/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            LololyricsService service = retrofit.create(LololyricsService.class);
+            Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
+            lyricsCall.enqueue(new Callback<Lyrics>() {
+                @Override
+                public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
+                    currentSong.lyrics = response.body().lyric;
+                }
+
+                @Override
+                public void onFailure(Call<Lyrics> call, Throwable t) {
+                    //t.getMessage();
+                    //t.printStackTrace();
+
+                }
+            });
+            artistText.setText(currentSong.getArtist());
+            songText.setText(currentSong.getTitle());
             mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
-
-                    artistText.setText(currentSong.getArtist());
-                    songText.setText(currentSong.getTitle());
                     mediaPlayer.start();
                     pl.setText(pauseSymbol);
                 }

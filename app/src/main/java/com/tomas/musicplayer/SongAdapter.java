@@ -27,8 +27,10 @@ public class SongAdapter extends ArrayAdapter<Song> {
 
         Song song = getItem(position);
         if (song!= null) {
-            TextView text = (TextView)convertView.findViewById(R.id.text1);
+            TextView text = (TextView)convertView.findViewById(R.id.songName);
+            TextView artistText = (TextView)convertView.findViewById(R.id.artistName);
             text.setText(song.getTitle());
+            artistText.setText(song.getArtist());
         }
 
         return convertView;
