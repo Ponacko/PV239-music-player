@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private List<String> songPaths = new ArrayList<>();
     private List<Song> songs = new ArrayList<Song>();
     private Set<Artist> artists = new HashSet<>();
-    final MediaPlayer mp = new MediaPlayer();
+    final MediaPlayer mp = MpWrapper.createMp();
     Button pl = null;
     TextView artistText;
     TextView songText;
@@ -76,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
         Realm.init(this);
         realm = Realm.getDefaultInstance();
         RealmResults<Song> results = realm.where(Song.class).findAll();
+        Current current = realm.where(Current.class).findFirst();
+        if (current != null){
+            currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
+        }
         if (results.isEmpty()){
             updatePlaylist();
         }
@@ -90,18 +94,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-                if (currentSong != null){
-                    intent.putExtra("currentSongPath", currentSong.getPath());
-                    startActivity(intent);
-                }
+                   startActivity(intent);
             }
         });
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!mp.isPlaying()){
-                    mp.start();
-                    play.setText(pauseSymbol);
+                if (!mp.isPlaying() && currentSong!= null){
+                    play(currentSong);
                 }
                 else {
                     mp.pause();
@@ -111,10 +111,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void play(int position){
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Current current = realm.where(Current.class).findFirst();
+        if (current != null){
+            currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
+        }
+        artistText.setText(currentSong.getArtist());
+        songText.setText(currentSong.getTitle());
+        if(mp.isPlaying()){
+            pl.setText(pauseSymbol);
+        }
+    }
+
+    public void play(Song song){
         try{
             mp.reset();
-            currentSong = songs.get(position);
+            switchCurrentSong(song);
             mp.setDataSource(currentSong.getPath());
 
 
@@ -213,6 +227,21 @@ public class MainActivity extends AppCompatActivity {
         realm.beginTransaction();
         List<Artist> realmArtists = realm.copyToRealm(artists);
         List<Song> realmSongs = realm.copyToRealm(songs);
+        realm.commitTransaction();
+    }
+
+    private void switchCurrentSong(Song to){
+        currentSong = to;
+        Current current = realm.where(Current.class).findFirst();
+        realm.beginTransaction();
+        if (current == null){
+            current = new Current();
+            current.path = currentSong.getPath();
+            realm.copyToRealm(current);
+        }
+        else {
+            current.path = currentSong.getPath();
+        }
         realm.commitTransaction();
     }
 }

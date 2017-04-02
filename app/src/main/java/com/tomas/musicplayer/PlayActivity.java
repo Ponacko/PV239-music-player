@@ -26,8 +26,8 @@ public class PlayActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Realm realm = Realm.getDefaultInstance();
-        String currentSongPath = (String) getIntent().getSerializableExtra("currentSongPath");
-        currentSong = realm.where(Song.class).equalTo("path", currentSongPath).findFirst();
+        Current current = realm.where(Current.class).findFirst();
+        currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
         TextView lyric = (TextView)findViewById(R.id.lyric);
         lyric.setText(currentSong.lyrics);
         setTitle(currentSong.getTitle());
