@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         else {
             songs = results.subList(0, results.size() - 1);
         }
+
         songList = new SongAdapter(this, R.layout.song_item, songs);
 
         LinearLayout bottomBar = (LinearLayout) findViewById(R.id.bottomBar);
@@ -93,12 +94,8 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("currentSongPath", currentSong.getPath());
                     startActivity(intent);
                 }
-
             }
         });
-
-
-
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -110,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
                     mp.pause();
                     play.setText(playSymbol);
                 }
-
             }
         });
     }
@@ -128,22 +124,28 @@ public class MainActivity extends AppCompatActivity {
                     .build();
 
             HerokuappService service = retrofit.create(HerokuappService.class);
-            Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
-            lyricsCall.enqueue(new Callback<Lyrics>() {
-                @Override
-                public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
-                    realm.beginTransaction();
-                    currentSong.lyrics = response.body().lyric;
-                    realm.commitTransaction();
-                }
+            if ((currentSong.lyrics == null || currentSong.lyrics.isEmpty())
+                    && currentSong.getArtist() != Song.NO_ARTIST) {
+                Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
+                lyricsCall.enqueue(new Callback<Lyrics>() {
+                    @Override
+                    public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
+                        if (response.body() != null){
+                            realm.beginTransaction();
+                            currentSong.lyrics = response.body().lyric;
+                            realm.commitTransaction();
+                        }
+                    }
 
-                @Override
-                public void onFailure(Call<Lyrics> call, Throwable t) {
-                    //t.getMessage();
-                    //t.printStackTrace();
+                    @Override
+                    public void onFailure(Call<Lyrics> call, Throwable t) {
+                        //t.getMessage();
+                        //t.printStackTrace();
 
-                }
-            });
+                    }
+                });
+            }
+
             artistText.setText(currentSong.getArtist());
             songText.setText(currentSong.getTitle());
             mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {

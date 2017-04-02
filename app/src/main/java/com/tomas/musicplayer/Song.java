@@ -65,7 +65,7 @@ public class Song extends RealmObject{
     }
 
     public String getTitle() {
-        if (title== null){
+        if (title == null){
             int i = path.lastIndexOf('/');
             return  path.substring(i+1);
         }

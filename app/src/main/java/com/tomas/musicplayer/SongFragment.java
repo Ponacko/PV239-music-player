@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Created by Tomas on 13. 3. 2017.
