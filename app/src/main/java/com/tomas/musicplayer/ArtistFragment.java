@@ -12,20 +12,30 @@ import android.widget.ListView;
 import java.util.Collections;
 import java.util.List;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 
 
 public class ArtistFragment extends Fragment{
+    private static ArtistFragment fragment;
     protected ListView list;
     protected ArtistAdapter artistList;
+    private Realm realm;
 
     public ArtistFragment() {
         // Required empty public constructor
+        fragment = this;
     }
+
+    public static ArtistFragment getFragment(){
+        return fragment;
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        realm = Realm.getDefaultInstance();
     }
 
     @Override
@@ -38,19 +48,20 @@ public class ArtistFragment extends Fragment{
         return view;
     }
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view,savedInstanceState);
-        List<Artist> artists = ((MainActivity)getActivity()).realm.where(Artist.class).findAllSorted("name");
+    public void update(){
+        List<Artist> artists = realm.where(Artist.class).findAllSorted("name");
         artistList = new ArtistAdapter(getContext(), R.layout.artist_item, artists);
         artistList.notifyDataSetChanged();
         list.setAdapter(artistList);
-        //list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-           // @Override
-            //public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-              //  ((MainActivity)getActivity()).play(position);
-            //}
-        //});
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view,savedInstanceState);
+        List<Artist> artists = realm.where(Artist.class).findAllSorted("name");
+        artistList = new ArtistAdapter(getContext(), R.layout.artist_item, artists);
+        artistList.notifyDataSetChanged();
+        list.setAdapter(artistList);
 
     }
 

@@ -15,6 +15,9 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
+
+import io.realm.Realm;
 
 /**
  * Created by Tomas on 13. 3. 2017.
@@ -23,9 +26,15 @@ import java.util.Collections;
 public class SongFragment extends Fragment{
     protected ListView list;
     protected SongAdapter songList;
+    private Realm realm;
+    private static SongFragment fragment;
 
     public SongFragment(){
+        fragment = this;
+    }
 
+    public static SongFragment getFragment(){
+        return fragment;
     }
 
 
@@ -33,6 +42,7 @@ public class SongFragment extends Fragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        realm = Realm.getDefaultInstance();
     }
 
     @Override
@@ -44,12 +54,9 @@ public class SongFragment extends Fragment{
         return view;
     }
 
-
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view,savedInstanceState);
-        songList = ((MainActivity)getActivity()).getSongAdapter();
+    public void update(){
+        List<Song> songs = realm.where(Song.class).findAll();
+        songList = new SongAdapter(getContext(), R.layout.song_item, songs);
         list.setAdapter(songList);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -58,7 +65,24 @@ public class SongFragment extends Fragment{
                 ((MainActivity)getActivity()).play(song);
             }
         });
+    }
 
+
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view,savedInstanceState);
+        List<Song> songs = realm.where(Song.class).findAll();
+        songList = new SongAdapter(getContext(), R.layout.song_item, songs);
+        list.setAdapter(songList);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Song song = songList.getItem(position);
+                ((MainActivity)getActivity()).play(song);
+            }
+        });
     }
 
 }
+

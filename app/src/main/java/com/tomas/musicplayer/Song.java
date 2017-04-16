@@ -47,17 +47,10 @@ public class Song extends RealmObject{
                 md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         this.artist =
                 md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        this.trackNumber = parseInt(
-                md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
-        this.duration = parseInt(
-                md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        String discNumberStr =
-                md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DISC_NUMBER);
-        if (discNumberStr != null) {
-            this.discNumber = parseInt(discNumberStr);
-        } else {
-            this.discNumber = -1;
-        }
+        //this.trackNumber = parseInt(
+          //      md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+
+
     }
 
     public String getPath() {

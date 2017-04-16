@@ -1,11 +1,15 @@
 package com.tomas.musicplayer;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,6 +19,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.github.angads25.filepicker.controller.DialogSelectionListener;
+import com.github.angads25.filepicker.model.DialogConfigs;
+import com.github.angads25.filepicker.model.DialogProperties;
+import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,13 +44,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MainActivity extends AppCompatActivity {
-    private static final String SD_PATH = Environment.getExternalStorageDirectory().getParentFile().getParentFile().getPath();
-    private static final String SD_PATH2 = Environment.getExternalStorageDirectory().getParentFile().getPath();
     private static final String playSymbol = "▶";
     private static final String pauseSymbol = "❚❚";
-    private List<String> songPaths = new ArrayList<>();
     private List<Song> songs = new ArrayList<Song>();
-    private Set<Artist> artists = new HashSet<>();
     final MediaPlayer mp = MpWrapper.createMp();
     Button pl = null;
     TextView artistText;
@@ -49,9 +55,11 @@ public class MainActivity extends AppCompatActivity {
     Realm realm;
     private Toolbar toolbar;
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    public ViewPager viewPager;
     SongAdapter songList;
     private Song currentSong;
+    private PlaylistUpdater playlistUpdater;
+    private String[] selectedFiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,12 +84,31 @@ public class MainActivity extends AppCompatActivity {
         Realm.init(this);
         realm = Realm.getDefaultInstance();
         RealmResults<Song> results = realm.where(Song.class).findAll();
-        Current current = realm.where(Current.class).findFirst();
+        final Current current = realm.where(Current.class).findFirst();
+
         if (current != null){
             currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
         }
+
         if (results.isEmpty()){
-            updatePlaylist();
+            DialogProperties properties = new DialogProperties();
+            properties.selection_mode = DialogConfigs.MULTI_MODE;
+            properties.selection_type = DialogConfigs.DIR_SELECT;
+            properties.root = new File("/");
+            properties.error_dir = new File(DialogConfigs.STORAGE_DIR);
+            properties.offset = new File(DialogConfigs.STORAGE_DIR);
+            properties.extensions = null;
+            FilePickerDialog dialog = new FilePickerDialog(MainActivity.this,properties);
+            dialog.setTitle("Select your music folder");
+            dialog.show();
+            dialog.setDialogSelectionListener(new DialogSelectionListener() {
+                @Override
+                public void onSelectedFilePaths(String[] files) {
+                    selectedFiles = files;
+                    loadFromFolders(files);
+                }
+            });
+
         }
         else {
             songs = results.subList(0, results.size() - 1);
@@ -111,15 +138,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    private void loadFromFolders(String[] files){
+        for(int i = 0; i< files.length; i++){
+            PlaylistUpdater playlistUpdater = new PlaylistUpdater();
+            playlistUpdater.setContext(MainActivity.this);
+            playlistUpdater.execute(files[i]);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        }
+
+    }
+
     @Override
     protected void onResume(){
         super.onResume();
         Current current = realm.where(Current.class).findFirst();
         if (current != null){
             currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
-        }
+
         artistText.setText(currentSong.getArtist());
         songText.setText(currentSong.getTitle());
+        }
         if(mp.isPlaying()){
             pl.setText(pauseSymbol);
         }
@@ -186,48 +231,6 @@ public class MainActivity extends AppCompatActivity {
 
     public SongAdapter getSongAdapter(){
         return songList;
-    }
-
-
-    private void findSongs(File folder) {
-        File[] files = folder.listFiles(new Mp3Filter());
-        if (files != null && files.length > 0) {
-            for (File f : files) {
-                songPaths.add(f.getAbsolutePath());
-            }
-        }
-        File[] dirs = folder.listFiles(new DirFilter());
-        if (dirs != null && dirs.length > 0) {
-            for (File f : dirs) {
-                findSongs(f);
-            }
-        }
-    }
-
-
-    private void updatePlaylist() {
-
-        File home = new File(SD_PATH);
-        if (!home.exists()){
-            home = new File(SD_PATH2);
-        }
-        final MediaMetadataRetriever md = new MediaMetadataRetriever();
-        findSongs(home);
-        for (String s : songPaths){
-            Song song = new Song();
-            song.init(s, md);
-            String artistName = song.getArtist();
-            if (artistName != Song.NO_ARTIST){
-                Artist artist = new Artist();
-                artist.init(artistName);
-                artists.add(artist);
-            }
-            songs.add(song);
-        }
-        realm.beginTransaction();
-        List<Artist> realmArtists = realm.copyToRealm(artists);
-        List<Song> realmSongs = realm.copyToRealm(songs);
-        realm.commitTransaction();
     }
 
     private void switchCurrentSong(Song to){

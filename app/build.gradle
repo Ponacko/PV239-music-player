@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId "com.tomas.musicplayer"
         minSdkVersion 15
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -33,6 +33,7 @@ dependencies {
         exclude group: 'stax', module: 'stax-api'
         exclude group: 'stax', module: 'stax'
     }
+    compile 'com.github.angads25:filepicker:1.1.0'
     compile 'com.android.support:design:25.0.1'
     testCompile 'junit:junit:4.12'
 }
