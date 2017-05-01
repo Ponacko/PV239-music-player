@@ -36,6 +36,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private Song currentSong;
     private PlaylistUpdater playlistUpdater;
     private String[] selectedFiles;
+    final Player p = new Player();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!mp.isPlaying() && currentSong!= null){
+                    play.setText(pauseSymbol);
                     play(currentSong);
                 }
                 else {
@@ -136,6 +139,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+            p.setCurrentSong(currentSong);
+            p.SwitchToNext();
+            }
+        });
+
+        p.setPlaylist(songs);
+        p.setCurrentSong(currentSong);
     }
 
 
@@ -171,55 +185,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void play(Song song){
-        try{
-            mp.reset();
-            switchCurrentSong(song);
-            mp.setDataSource(currentSong.getPath());
-
-
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("http://lyric-api.herokuapp.com/api/find/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            HerokuappService service = retrofit.create(HerokuappService.class);
-            if ((currentSong.lyrics == null || currentSong.lyrics.isEmpty())
-                    && currentSong.getArtist() != Song.NO_ARTIST) {
-                Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
-                lyricsCall.enqueue(new Callback<Lyrics>() {
-                    @Override
-                    public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
-                        if (response.body() != null){
-                            realm.beginTransaction();
-                            currentSong.lyrics = response.body().lyric;
-                            realm.commitTransaction();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<Lyrics> call, Throwable t) {
-                        //t.getMessage();
-                        //t.printStackTrace();
-
-                    }
-                });
-            }
-
-            artistText.setText(currentSong.getArtist());
-            songText.setText(currentSong.getTitle());
-            mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mediaPlayer) {
-                    mediaPlayer.start();
-                    pl.setText(pauseSymbol);
-                }
-            });
-            mp.prepareAsync();
-
-        } catch (IOException e) {
-            Log.v(getString(R.string.app_name),e.getMessage());
-            e.printStackTrace();
-        }
+        switchCurrentSong(song);
+        pl.setText(pauseSymbol);
+        artistText.setText(currentSong.getArtist());
+        songText.setText(currentSong.getTitle());
+        p.setCurrentSong(currentSong);
+        p.Play();
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -246,5 +217,9 @@ public class MainActivity extends AppCompatActivity {
             current.path = currentSong.getPath();
         }
         realm.commitTransaction();
+    }
+
+    public void setSongs(List<Song> s) {
+        songs = s;
     }
 }

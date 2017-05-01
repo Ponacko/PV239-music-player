@@ -67,6 +67,21 @@ public class SongFragment extends Fragment{
         });
     }
 
+    public void updateByArtist(String artist) {
+        final List<Song> songs = realm.where(Song.class).equalTo("artist", artist).findAll();
+        Player.getPlayer().setPlaylist(songs);
+        songList = new SongAdapter(getContext(), R.layout.song_item, songs);
+        list.setAdapter(songList);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Song song = songList.getItem(position);
+                ((MainActivity)getActivity()).setSongs(songs);
+                ((MainActivity)getActivity()).play(song);
+            }
+        });
+    }
+
 
 
     @Override
@@ -74,6 +89,7 @@ public class SongFragment extends Fragment{
         super.onViewCreated(view,savedInstanceState);
         List<Song> songs = realm.where(Song.class).findAll();
         songList = new SongAdapter(getContext(), R.layout.song_item, songs);
+        songList.notifyDataSetChanged();
         list.setAdapter(songList);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

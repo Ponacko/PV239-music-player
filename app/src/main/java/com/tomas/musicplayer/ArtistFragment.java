@@ -3,6 +3,7 @@ package com.tomas.musicplayer;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.util.SortedList;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,7 +63,14 @@ public class ArtistFragment extends Fragment{
         artistList = new ArtistAdapter(getContext(), R.layout.artist_item, artists);
         artistList.notifyDataSetChanged();
         list.setAdapter(artistList);
-
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Artist artist = artistList.getItem(position);
+                SongFragment songFrag = SongFragment.getFragment();
+                songFrag.updateByArtist(artist.getName());
+            }
+        });
     }
 
 }

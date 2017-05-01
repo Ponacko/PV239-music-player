@@ -62,6 +62,38 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true">
 
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/backwardButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="|&lt;&lt;" />
+
+            <Button
+                android:id="@+id/playButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▶" />
+
+            <Button
+                android:id="@+id/forwardButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=">>|" />
+
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,43 +117,6 @@
 
         </LinearLayout>
 
-
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:orientation="horizontal" >
-
-
-
-            <Button
-                android:id="@+id/forwardButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=">>" />
-
-            <Button
-                android:id="@+id/playButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="▶" />
-
-            <Button
-                android:id="@+id/backwardButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="&lt;&lt;" />
-
-
-
-        </LinearLayout>
 
     </LinearLayout>
 

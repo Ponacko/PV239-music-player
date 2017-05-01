@@ -31,7 +31,7 @@ public class Song extends RealmObject{
     private int discNumber;
     private int duration;
     private String artwork;
-    public String lyrics;
+    private String lyrics;
     private int elapsedTime;
 
     public Song() {
@@ -74,6 +74,17 @@ public class Song extends RealmObject{
         return  NO_ARTIST;
     }
         return artist;
+    }
+
+    public void setLyrics(String lyrics) {
+        this.lyrics = lyrics;
+    }
+
+    public String getLyrics() {
+        if (lyrics==null)
+            return "";
+        else
+            return lyrics;
     }
 
     public int getTrackNumber() {

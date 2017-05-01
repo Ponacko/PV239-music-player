@@ -1,10 +1,14 @@
 package com.tomas.musicplayer;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -14,11 +18,17 @@ import android.widget.TextView;
 import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PlayActivity extends AppCompatActivity {
     private Song currentSong;
     private Button forwardButton, backwardButton, playButton;
     private TextView currentTimeText, durationTimeText;
+    private TextView lyric;
     private SeekBar seekBar;
     private int currentTime;
     private int durationTime;
@@ -26,6 +36,7 @@ public class PlayActivity extends AppCompatActivity {
     private static final String pauseSymbol = "❚❚";
     private static final String playSymbol = "▶";
     final MediaPlayer mp = MpWrapper.createMp();
+    final Player player = Player.getPlayer();
 
     private Handler myHandler = new Handler();
 
@@ -37,6 +48,17 @@ public class PlayActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        Realm realm = Realm.getDefaultInstance();
+        Current current = realm.where(Current.class).findFirst();
+        currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
+        player.setCurrentSong(currentSong);
+
+        currentSong = player.getCurrentSong();
+
+        lyric = (TextView)findViewById(R.id.lyric);
+        lyric.setText(currentSong.getLyrics());
+        setTitle(currentSong.getTitle());
+        getSupportActionBar().setTitle(currentSong.getTitle());
         setSupportActionBar(toolbar);
 
         currentTimeText = (TextView) findViewById(R.id.currentTimeText);
@@ -49,14 +71,7 @@ public class PlayActivity extends AppCompatActivity {
             playButton.setText(pauseSymbol);
         seekBar = (SeekBar)findViewById(R.id.seekBar);
 
-        Realm realm = Realm.getDefaultInstance();
-        Current current = realm.where(Current.class).findFirst();
-        currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
-        TextView lyric = (TextView)findViewById(R.id.lyric);
-        lyric.setText(currentSong.lyrics);
-        setTitle(currentSong.getTitle());
-        getSupportActionBar().setTitle(currentSong.getTitle());
-
+        updateLyrics();
 
         durationTime = mp.getDuration();
         currentTime = mp.getCurrentPosition();
@@ -84,29 +99,48 @@ public class PlayActivity extends AppCompatActivity {
             }
         });
 
-        forwardButton.setOnClickListener(new View.OnClickListener() {
+        final GestureDetector gestureDetector = new GestureDetector(this, new SingleTapConfirm());
+
+
+        forwardButton.setOnTouchListener(new View.OnTouchListener() {
+
             @Override
-            public void onClick(View arg0) {
-                currentTime = mp.getCurrentPosition();
-                if(currentTime + skipSeconds <= mp.getDuration()){
-                    mp.seekTo(currentTime + skipSeconds);
-                }else{
-                    mp.seekTo(mp.getDuration());
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (gestureDetector.onTouchEvent(event)) {
+                    // single tap
+                    player.SwitchToNext();
+                    currentSong = player.getCurrentSong();
+                    playButton.setText(pauseSymbol);
+                    updateLyrics();
+                    //refreshActivity();
+                } else {
+                    // code for move and drag
+                    mp.seekTo(mp.getCurrentPosition() + 100);
                 }
+                return false;
             }
         });
 
-        backwardButton.setOnClickListener(new View.OnClickListener() {
+        backwardButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View arg0) {
-                currentTime = mp.getCurrentPosition();
-                if(currentTime - skipSeconds >= 0){
-                    mp.seekTo(currentTime - skipSeconds);
-                }else{
-                    mp.seekTo(0);
+            public boolean onTouch(View v, MotionEvent event) {
+                if (gestureDetector.onTouchEvent(event)) {
+                    // single tap
+                    player.SwitchToPrevious();
+                    currentSong = player.getCurrentSong();
+                    playButton.setText(pauseSymbol);
+                    updateLyrics();
+                    //refreshActivity();
+                } else {
+                    // code for move and drag
+                    mp.seekTo(mp.getCurrentPosition() - 100);
                 }
-           }
+                return false;
+            }
+
         });
+
 
         seekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
@@ -129,6 +163,53 @@ public class PlayActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void updateLyrics() {
+        if ((currentSong.getLyrics().isEmpty())
+                && currentSong.getArtist() != Song.NO_ARTIST) {
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("http://lyric-api.herokuapp.com/api/find/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            HerokuappService service = retrofit.create(HerokuappService.class);
+                Call<Lyrics> lyricsCall = service.getLyrics(currentSong.getArtist(), currentSong.getTitle());
+                lyricsCall.enqueue(new Callback<Lyrics>() {
+                    @Override
+                    public void onResponse(Call<Lyrics> call, Response<Lyrics> response) {
+                        if (response.body() != null){
+                            Realm realm = Realm.getDefaultInstance();
+                            realm.beginTransaction();
+                            currentSong.setLyrics(response.body().lyric);
+                            realm.commitTransaction();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Lyrics> call, Throwable t) {
+                        //t.getMessage();
+                        //t.printStackTrace();
+
+                    }
+                });
+            }
+        lyric.setText(currentSong.getLyrics());
+        durationTime = mp.getDuration();
+        durationTimeText.setText(String.format("%d min, %d sec",
+                TimeUnit.MILLISECONDS.toMinutes((long) durationTime),
+                TimeUnit.MILLISECONDS.toSeconds((long) durationTime) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.
+                                toMinutes((long) durationTime)))
+        );
+
+    }
+
+    /*private void refreshActivity() {
+        finish();
+        overridePendingTransition(0, 0);
+        startActivity(getIntent());
+        overridePendingTransition(0, 0);
+    }*/
 
     private Runnable UpdateSongTime = new Runnable() {
         public void run() {
@@ -160,6 +241,14 @@ public class PlayActivity extends AppCompatActivity {
         currentTime = (int) ((((double)progress) / 100) * totalDuration);
         // return current duration in milliseconds
         return currentTime * 1000;
+    }
+
+    private class SingleTapConfirm extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent event) {
+            return true;
+        }
     }
 
 }
