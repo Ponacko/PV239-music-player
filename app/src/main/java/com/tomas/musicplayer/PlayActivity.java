@@ -113,7 +113,7 @@ public class PlayActivity extends AppCompatActivity {
                     currentSong = player.getCurrentSong();
                     playButton.setText(pauseSymbol);
                     updateLyrics();
-                    //refreshActivity();
+                    getSupportActionBar().setTitle(currentSong.getTitle());
                 } else {
                     // code for move and drag
                     mp.seekTo(mp.getCurrentPosition() + 100);
@@ -131,7 +131,7 @@ public class PlayActivity extends AppCompatActivity {
                     currentSong = player.getCurrentSong();
                     playButton.setText(pauseSymbol);
                     updateLyrics();
-                    //refreshActivity();
+                    getSupportActionBar().setTitle(currentSong.getTitle());
                 } else {
                     // code for move and drag
                     mp.seekTo(mp.getCurrentPosition() - 100);

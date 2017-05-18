@@ -14,9 +14,11 @@ public class Player {
     private Song currentSong;
     final MediaPlayer mp = MpWrapper.createMp();
     private static Player player;
+    private MainActivity activity;
 
-    public Player() {
+    public Player(MainActivity activity) {
         player = this;
+        this.activity = activity;
     }
 
     public static Player getPlayer() {
@@ -69,12 +71,14 @@ public class Player {
     public void SwitchToNext() {
         Pause();
         currentSong = playlist.get((playlist.indexOf(currentSong) + 1) % playlist.size());
+        activity.switchCurrentSong(currentSong);
         Play();
     }
 
     public void SwitchToPrevious() {
         Pause();
         currentSong = playlist.get((playlist.indexOf(currentSong) + playlist.size() - 1) % playlist.size());
+        activity.switchCurrentSong(currentSong);
         Play();
     }
 

@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private Song currentSong;
     private PlaylistUpdater playlistUpdater;
     private String[] selectedFiles;
-    final Player p = new Player();
+    final Player p = new Player(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void play(Song song){
+        p.Pause();
         switchCurrentSong(song);
         pl.setText(pauseSymbol);
         artistText.setText(currentSong.getArtist());
@@ -204,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         return songList;
     }
 
-    private void switchCurrentSong(Song to){
+    public void switchCurrentSong(Song to){
         currentSong = to;
         Current current = realm.where(Current.class).findFirst();
         realm.beginTransaction();
