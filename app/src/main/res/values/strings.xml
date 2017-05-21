@@ -10,4 +10,6 @@
     <string name="Pause">Pause</string>
     <string name="Play">Play</string>
     <string name="title_activity_play">PlayActivity</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>

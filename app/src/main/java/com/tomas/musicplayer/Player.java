@@ -56,6 +56,9 @@ public class Player {
                 });
                 mp.prepareAsync();
             }
+            else if (currentSong != null) {
+                Pause();
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
