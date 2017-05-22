@@ -1,5 +1,8 @@
 package com.tomas.musicplayer;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -114,6 +117,9 @@ public class PlayActivity extends AppCompatActivity {
                     playButton.setText(pauseSymbol);
                     updateLyrics();
                     getSupportActionBar().setTitle(currentSong.getTitle());
+                    //ugly fix yet to be improved
+                    player.setCurrentSong(currentSong);
+                    player.Play();
                 } else {
                     // code for move and drag
                     mp.seekTo(mp.getCurrentPosition() + 100);
@@ -132,6 +138,9 @@ public class PlayActivity extends AppCompatActivity {
                     playButton.setText(pauseSymbol);
                     updateLyrics();
                     getSupportActionBar().setTitle(currentSong.getTitle());
+                    //ugly fix yet to be improved
+                    player.setCurrentSong(currentSong);
+                    player.Play();
                 } else {
                     // code for move and drag
                     mp.seekTo(mp.getCurrentPosition() - 100);

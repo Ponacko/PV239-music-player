@@ -1,5 +1,7 @@
 package com.tomas.musicplayer;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
@@ -59,6 +61,11 @@ public class Player {
             else if (currentSong != null) {
                 Pause();
             }
+
+            //update widget in case of change of playing song
+            int[] ids = AppWidgetManager.getInstance(activity.getApplication()).getAppWidgetIds(new ComponentName(activity.getApplication(), PlayerWidget.class));
+            PlayerWidget myWidget = new PlayerWidget();
+            myWidget.onUpdate(activity.getApplicationContext(), AppWidgetManager.getInstance(activity.getApplicationContext()),ids);
 
         } catch (IOException e) {
             e.printStackTrace();
