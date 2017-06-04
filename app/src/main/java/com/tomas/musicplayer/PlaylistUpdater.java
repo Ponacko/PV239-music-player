@@ -34,7 +34,7 @@ public class PlaylistUpdater extends AsyncTask<String, Integer, Void> {
         progress = new ProgressDialog(activity);
         progress.setMessage("Finding music");
         progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progress.setCancelable(false);
+        progress.setCancelable(true);
         progress.setProgress(0);
         progress.show();
     }

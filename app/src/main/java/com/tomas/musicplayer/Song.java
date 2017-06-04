@@ -1,15 +1,6 @@
 package com.tomas.musicplayer;
 
-import android.content.Context;
 import android.media.MediaMetadataRetriever;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.List;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -22,6 +13,7 @@ import static java.lang.Integer.parseInt;
 
 public class Song extends RealmObject{
     public static String NO_ARTIST = "Missing artist";
+    private boolean artLoaded = false;
     @PrimaryKey
     private String path;
     private String title;
@@ -30,7 +22,7 @@ public class Song extends RealmObject{
     private int trackNumber;
     private int discNumber;
     private int duration;
-    private String artwork;
+    private String artwork; //name of image file
     private String lyrics;
     private int elapsedTime;
 
@@ -47,6 +39,19 @@ public class Song extends RealmObject{
                 md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         this.artist =
                 md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+
+        if (artist != null) {
+            if (album != null) {
+                this.artwork = artist + "-" + album;
+            }
+            else {
+                this.artwork = artist;
+            }
+        }
+        else {
+            this.artwork = this.getTitle();
+        }
+
         //this.trackNumber = parseInt(
           //      md.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
 
@@ -58,9 +63,15 @@ public class Song extends RealmObject{
     }
 
     public String getTitle() {
+        String t = "";
         if (title == null){
             int i = path.lastIndexOf('/');
-            return  path.substring(i+1);
+            t =  path.substring(i+1);
+
+            if (t.endsWith(".mp3")) {
+                t = t.substring(0, t.length()-4);
+            }
+            return t;
         }
         return title;
     }
@@ -100,11 +111,22 @@ public class Song extends RealmObject{
     }
 
     public String getArtwork() {
-        return artwork;
+        if (artwork == null)
+            return "";
+        else
+            return artwork;
     }
 
     public void setArtwork(String artwork) {
         this.artwork = artwork;
+    }
+
+    public void setArtLoaded(boolean bool) {
+        this.artLoaded = bool;
+    }
+
+    public boolean isArtLoaded() {
+        return artLoaded;
     }
 
     public int getElapsedTime() {

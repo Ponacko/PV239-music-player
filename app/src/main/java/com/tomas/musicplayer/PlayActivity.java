@@ -1,23 +1,28 @@
 package com.tomas.musicplayer;
 
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.media.MediaPlayer;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.*;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
@@ -30,6 +35,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class PlayActivity extends AppCompatActivity {
     private Song currentSong;
     private Button forwardButton, backwardButton, playButton;
+    private Button imageButton;
     private TextView currentTimeText, durationTimeText;
     private TextView lyric;
     private SeekBar seekBar;
@@ -40,6 +46,11 @@ public class PlayActivity extends AppCompatActivity {
     private static final String playSymbol = "▶";
     final MediaPlayer mp = MpWrapper.createMp();
     final Player player = Player.getPlayer();
+    private ImageView image;
+    private String imageURL;
+    private Realm realm;
+
+    private LinearLayout picture;
 
     private Handler myHandler = new Handler();
 
@@ -51,7 +62,8 @@ public class PlayActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Realm realm = Realm.getDefaultInstance();
+        picture = (LinearLayout) findViewById(R.id.centralArea);
+        realm = Realm.getDefaultInstance();
         Current current = realm.where(Current.class).findFirst();
         currentSong = realm.where(Song.class).equalTo("path", current.path).findFirst();
         player.setCurrentSong(currentSong);
@@ -67,6 +79,8 @@ public class PlayActivity extends AppCompatActivity {
         currentTimeText = (TextView) findViewById(R.id.currentTimeText);
         durationTimeText = (TextView) findViewById(R.id.durationTimeText);
 
+        imageButton = (Button) findViewById(R.id.imageButton);
+        image = (ImageView) findViewById(R.id.image);
         forwardButton = (Button) findViewById(R.id.forwardButton);
         backwardButton = (Button)findViewById(R.id.backwardButton);
         playButton = (Button)findViewById(R.id.playButton);
@@ -75,6 +89,7 @@ public class PlayActivity extends AppCompatActivity {
         seekBar = (SeekBar)findViewById(R.id.seekBar);
 
         updateLyrics();
+        updateImage();
 
         durationTime = mp.getDuration();
         currentTime = mp.getCurrentPosition();
@@ -116,6 +131,8 @@ public class PlayActivity extends AppCompatActivity {
                     currentSong = player.getCurrentSong();
                     playButton.setText(pauseSymbol);
                     updateLyrics();
+                    updateImage();
+                    updateDuration();
                     getSupportActionBar().setTitle(currentSong.getTitle());
                     //ugly fix yet to be improved
                     player.setCurrentSong(currentSong);
@@ -137,6 +154,8 @@ public class PlayActivity extends AppCompatActivity {
                     currentSong = player.getCurrentSong();
                     playButton.setText(pauseSymbol);
                     updateLyrics();
+                    updateImage();
+                    updateDuration();
                     getSupportActionBar().setTitle(currentSong.getTitle());
                     //ugly fix yet to be improved
                     player.setCurrentSong(currentSong);
@@ -173,6 +192,69 @@ public class PlayActivity extends AppCompatActivity {
         });
     }
 
+    private void updateImage() {
+        picture.setBackgroundColor(0x00000000);
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(currentSong.getPath());
+        byte[] pic = mmr.getEmbeddedPicture();
+        if (pic != null) {
+            //Log.d("pic: ", "is in metadata");
+            //pic is in metadata
+            Bitmap bm = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+            BitmapDrawable background = new BitmapDrawable(getResources(), bm);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                picture.setBackground(background);
+            }
+        }
+        else {
+            realm = Realm.getDefaultInstance();
+            final Current current = realm.where(Current.class).findFirst();
+            Song s = realm.where(Song.class).equalTo("path", current.path).findFirst();
+            Song song = realm.copyFromRealm(s);
+            song.init(s.getPath(), mmr);
+            if (!song.getArtwork().isEmpty() && ImageStorage.checkifImageExists(song.getArtwork())) {
+                //Log.d("pic: ", "is sure in file");
+                //Log.d("artwork ", song.getArtwork());
+                File file = ImageStorage.getImage("/" + song.getArtwork() + ".jpg");
+                String path = file.getAbsolutePath();
+                if (path != null) {
+                    Bitmap bm = BitmapFactory.decodeFile(path);
+                    BitmapDrawable background = new BitmapDrawable(getResources(), bm);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        picture.setBackground(background);
+                    }
+                }
+            } else if (!song.isArtLoaded()) {
+                ConnectivityManager cm =
+                        (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                boolean isConnected = activeNetwork != null &&
+                        activeNetwork.isConnectedOrConnecting();
+                if (isConnected) {
+                    //Log.d("pic: ", "no pic, try to download, save and show");
+                    ArtworkLoader ir = new ArtworkLoader(this);
+                    ir.execute();
+                    if (!song.getArtwork().isEmpty() && ImageStorage.checkifImageExists(song.getArtwork())) {
+                        File file = ImageStorage.getImage("/" + song.getArtwork() + ".jpg");
+                        String path = file.getAbsolutePath();
+                        if (path != null) {
+                            Bitmap bm = BitmapFactory.decodeFile(path);
+                            BitmapDrawable background = new BitmapDrawable(getResources(), bm);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                picture.setBackground(background);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                //picture.setBackgroundColor(0x00000000);
+            }
+        }
+
+    }
+
     private void updateLyrics() {
         if ((currentSong.getLyrics().isEmpty())
                 && currentSong.getArtist() != Song.NO_ARTIST) {
@@ -203,6 +285,10 @@ public class PlayActivity extends AppCompatActivity {
                 });
             }
         lyric.setText(currentSong.getLyrics());
+    }
+
+
+    private void updateDuration() {
         durationTime = mp.getDuration();
         durationTimeText.setText(String.format("%d min, %d sec",
                 TimeUnit.MILLISECONDS.toMinutes((long) durationTime),
@@ -210,15 +296,7 @@ public class PlayActivity extends AppCompatActivity {
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.
                                 toMinutes((long) durationTime)))
         );
-
     }
-
-    /*private void refreshActivity() {
-        finish();
-        overridePendingTransition(0, 0);
-        startActivity(getIntent());
-        overridePendingTransition(0, 0);
-    }*/
 
     private Runnable UpdateSongTime = new Runnable() {
         public void run() {
@@ -259,5 +337,7 @@ public class PlayActivity extends AppCompatActivity {
             return true;
         }
     }
+
+
 
 }

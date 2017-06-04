@@ -30,7 +30,13 @@
         android:id="@+id/centralArea"
         android:layout_below="@+id/topPanel"
         android:layout_above="@+id/bottomBar"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        >
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/image" />
 
         <ScrollView
             android:layout_width="match_parent"
@@ -91,6 +97,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=">>|" />
+
+            <Button
+                android:id="@+id/imageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="image" />
 
         </LinearLayout>
 

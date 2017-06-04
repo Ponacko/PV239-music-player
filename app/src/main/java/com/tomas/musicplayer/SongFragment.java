@@ -56,6 +56,7 @@ public class SongFragment extends Fragment{
 
     public void update(){
         List<Song> songs = realm.where(Song.class).findAll();
+        Player.getPlayer().setPlaylist(songs);
         songList = new SongAdapter(getContext(), R.layout.song_item, songs);
         list.setAdapter(songList);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
