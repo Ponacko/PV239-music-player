@@ -27,17 +27,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/centralArea"
+        android:id="@+id/overlay"
         android:layout_below="@+id/topPanel"
         android:layout_above="@+id/bottomBar"
         android:orientation="vertical"
         >
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/image" />
-
+        
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,11 +46,21 @@
                 android:textAlignment="center" />
         </ScrollView>
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/artwork"
-            android:layout_gravity="end"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/centralArea"
+        android:layout_below="@+id/topPanel"
+        android:layout_above="@+id/bottomBar"
+        android:orientation="vertical"
+        >
 
     </LinearLayout>
 
@@ -97,12 +102,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=">>|" />
-
-            <Button
-                android:id="@+id/imageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="image" />
 
         </LinearLayout>
 

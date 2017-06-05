@@ -3,6 +3,7 @@ package com.tomas.musicplayer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.*;
 import android.net.ConnectivityManager;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -35,7 +38,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class PlayActivity extends AppCompatActivity {
     private Song currentSong;
     private Button forwardButton, backwardButton, playButton;
-    private Button imageButton;
     private TextView currentTimeText, durationTimeText;
     private TextView lyric;
     private SeekBar seekBar;
@@ -79,7 +81,6 @@ public class PlayActivity extends AppCompatActivity {
         currentTimeText = (TextView) findViewById(R.id.currentTimeText);
         durationTimeText = (TextView) findViewById(R.id.durationTimeText);
 
-        imageButton = (Button) findViewById(R.id.imageButton);
         image = (ImageView) findViewById(R.id.image);
         forwardButton = (Button) findViewById(R.id.forwardButton);
         backwardButton = (Button)findViewById(R.id.backwardButton);
@@ -193,14 +194,15 @@ public class PlayActivity extends AppCompatActivity {
     }
 
     private void updateImage() {
+        Bitmap bm = null;
         picture.setBackgroundColor(0x00000000);
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         mmr.setDataSource(currentSong.getPath());
-        byte[] pic = mmr.getEmbeddedPicture();
+        final byte[] pic = mmr.getEmbeddedPicture();
         if (pic != null) {
             //Log.d("pic: ", "is in metadata");
             //pic is in metadata
-            Bitmap bm = BitmapFactory.decodeByteArray(pic, 0, pic.length);
+            bm = BitmapFactory.decodeByteArray(pic, 0, pic.length);
             BitmapDrawable background = new BitmapDrawable(getResources(), bm);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 picture.setBackground(background);
@@ -217,7 +219,7 @@ public class PlayActivity extends AppCompatActivity {
                 File file = ImageStorage.getImage("/" + song.getArtwork() + ".jpg");
                 String path = file.getAbsolutePath();
                 if (path != null) {
-                    Bitmap bm = BitmapFactory.decodeFile(path);
+                    bm = BitmapFactory.decodeFile(path);
                     BitmapDrawable background = new BitmapDrawable(getResources(), bm);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         picture.setBackground(background);
@@ -238,7 +240,7 @@ public class PlayActivity extends AppCompatActivity {
                         File file = ImageStorage.getImage("/" + song.getArtwork() + ".jpg");
                         String path = file.getAbsolutePath();
                         if (path != null) {
-                            Bitmap bm = BitmapFactory.decodeFile(path);
+                            bm = BitmapFactory.decodeFile(path);
                             BitmapDrawable background = new BitmapDrawable(getResources(), bm);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                                 picture.setBackground(background);
@@ -250,6 +252,27 @@ public class PlayActivity extends AppCompatActivity {
             else {
                 //picture.setBackgroundColor(0x00000000);
             }
+        }
+
+        //text contrast to picture setting
+        if (bm != null && !bm.isRecycled() && !(currentSong.getLyrics().isEmpty())) {
+            Palette.from(bm).generate(new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(Palette palette) {
+                    // Get the "vibrant" color swatch based on the bitmap
+                    Palette.Swatch vibrant = palette.getLightVibrantSwatch();
+                    if (vibrant != null) {
+                        // Set the background color of a layout based on the vibrant color
+                        //picture.setBackgroundColor(vibrant.getRgb());
+                        // Update the title TextView with the proper text color
+                        lyric.setTextColor(Color.BLACK);//vibrant.getTitleTextColor());
+                    }
+                }
+            });
+            picture.setAlpha(0.5f);
+        }
+        else {
+            picture.setAlpha(1.0f);
         }
 
     }
@@ -283,6 +306,9 @@ public class PlayActivity extends AppCompatActivity {
                     }
                 });
             }
+            /*if (currentSong.getTitle().equals("Empire of the clouds")) {
+                lyric.setText("currenTo ride the storm, to an empire of the clouds /nTo ride the storm, they climbed aboard their silver ghost /nTo ride the storm, to a kingdom that will come /nTo ride the storm, and damn the rest, oblivion");
+            }*/
         lyric.setText(currentSong.getLyrics());
     }
 
