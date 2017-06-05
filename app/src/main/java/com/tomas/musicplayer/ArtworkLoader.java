@@ -12,6 +12,8 @@ import android.widget.LinearLayout;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import de.umass.lastfm.*;
@@ -32,6 +34,7 @@ public class ArtworkLoader extends AsyncTask<Object, Object, Object> {
     private String artwork;
     private PlayActivity pa;
     private String key = "4707e0238889a50ea5a420bee1939a8c";
+    //API key to Last.fm
 
     public ArtworkLoader(PlayActivity pa) {
         this.pa = pa;
@@ -48,13 +51,10 @@ public class ArtworkLoader extends AsyncTask<Object, Object, Object> {
     @Override
     protected Object doInBackground(Object... objects) {
         try {
-            //no pic, try to donwload, save and show
-            //API key to Last.fm
             Caller.getInstance().setUserAgent("tst");
             Caller.getInstance().setCache(null);
 
             String surl = null;
-            song.setArtLoaded(true);
             if (song.getArtist() != Song.NO_ARTIST) {
                 if (!(song.getAlbum() == null || song.getAlbum().isEmpty())) {
                     de.umass.lastfm.Album a = de.umass.lastfm.Album.getInfo(song.getArtist(), song.getAlbum(), key);
@@ -66,15 +66,19 @@ public class ArtworkLoader extends AsyncTask<Object, Object, Object> {
                 }
             }
             else {
-                Collection<Track> tracks = Track.search(null, artwork, 1, key);
+                /*Collection<Track> tracks = Track.search(null, artwork, 1, key);
                 if (tracks != null && tracks.iterator().hasNext()) {
                     surl = tracks.iterator().next().getImageURL(ImageSize.LARGE);
-                }
+                }*/
+                Map<String, String> m = new HashMap<>();
+                m.put("track", artwork);
+                Result r = Caller.getInstance().call("track.search", key, m);
+                surl = r.getContentElement().getChild("trackmatches").getChild("track").getChildren("image").get(2).getText();
             }
                 Log.d("image url:", String.valueOf(surl));
 
                 url = new URL(surl);
-                URLConnection conn = url.openConnection();
+                song.setArtLoaded(true);
                 bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
         } catch (Exception ex) {
             //Log.d("error code", Caller.getInstance().getLastResult().getErrorMessage());
@@ -86,13 +90,14 @@ public class ArtworkLoader extends AsyncTask<Object, Object, Object> {
 
     @Override
     protected void onPostExecute(Object o) {
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(song);
-        realm.commitTransaction();
 
         if(song.isArtLoaded() && !ImageStorage.checkifImageExists(song.getArtwork()) && bitmap != null) {
             Log.d("artwork to be saved", artwork);
             ImageStorage.save(bitmap, artwork);
+
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(song);
+            realm.commitTransaction();
         }
     }
 }

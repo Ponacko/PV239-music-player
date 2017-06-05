@@ -214,7 +214,6 @@ public class PlayActivity extends AppCompatActivity {
             song.init(s.getPath(), mmr);
             if (!song.getArtwork().isEmpty() && ImageStorage.checkifImageExists(song.getArtwork())) {
                 //Log.d("pic: ", "is sure in file");
-                //Log.d("artwork ", song.getArtwork());
                 File file = ImageStorage.getImage("/" + song.getArtwork() + ".jpg");
                 String path = file.getAbsolutePath();
                 if (path != null) {
